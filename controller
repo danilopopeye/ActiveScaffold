@@ -1,0 +1,16 @@
+<?php
+
+class {name} extends Controller {
+
+	function __construct(){
+		parent::Controller();
+	}
+
+    function index(){
+        
+    }
+
+}
+
+/* End of file {fileName}.php */
+/* Location: ./system/application/controller/{fileName}.php */
