@@ -1,4 +1,4 @@
-m<?php
+<?php
 define('BASEPATH','../');
 define('DS',DIRECTORY_SEPARATOR);
 
@@ -6,32 +6,35 @@ define('DS',DIRECTORY_SEPARATOR);
 include( BASEPATH . '..'. DS .'helpers'. DS .'inflector_helper.php');
 
 class ActiveScaffold {
-    var $actions = array('M','MODEL','C','CONTROLLER');
+    var $actions = array('M','MODEL','C','CONTROLLER', 'L', 'LIST');
     var $conn;
     var $args;
+    var $tables;
     var $reserved = array(
         'Controller', 'CI_Base', '_ci_initialize', '_ci_scaffolding', 'index'
     );
 
     function run( $args ){
+        $this->connect();
+
         array_shift( $args );
 
         $this->args = $args;
+        
+        if( isset( $this->args[0] ) ){
+            $action = $this->parseAction( $this->args[0] );
 
-        switch( count( $this->args ) ){
-            case 2:
-                $this->getAction(
-                    $this->parseAction( $this->args[0] ), $this->args[1]
-                ); break;
-
-            case 1:
+            if( $action == 'list' ){
+                $table = $this->listTables();
                 
-                break;
+                return;
+            }
 
-            default:
-                echo 'menu';
-                break;
+            return $this->getAction( $this->args[0], $this->args[1] );
         }
+
+        $action = $this->parseAction( $this->menu() );
+        
     }
 
     function getAction( $type, $name = FALSE ){
@@ -41,7 +44,7 @@ class ActiveScaffold {
             return FALSE;
         }
 
-        $name = $this->parseName( $name );
+        $name = strtolower( $name );
 
         if( $this->getInput( 'Build a '. $type .' called "'. $name .'"', array('y','n') ) == 'n' ){
             // TODO: Redirect to menu
@@ -52,10 +55,8 @@ class ActiveScaffold {
         if( $this->save( $name, $type ) === TRUE ){
             echo ucwords( $type ) .' salvo!';
         }
-        
-        
     }
-    
+
     function save( $name, $type ){
         $dir = BASEPATH . $type . 's';
 
@@ -107,6 +108,8 @@ class ActiveScaffold {
             return 'model';
         } else if ( $a == 'C' OR $a == 'CONTROLLER' ){
             return 'controller';
+        } else if ( $a == 'L' OR $a == 'LIST' ){
+            return 'list';
         }
     }
 
@@ -119,22 +122,21 @@ class ActiveScaffold {
         }
 
         $buff = str_replace( '{name}', ucwords( $name ), $buff );
-
-        $buff = str_replace( '{fileName}', strtolower( $name ), $buff );
+        $buff = str_replace( '{model}', plural( ucwords( $name ) ), $buff );
+        $buff = str_replace( '{lowerame}', strtolower( $name ), $buff );
 
         return $buff;
     }
 
-    function parseName( $name ){
-        return strtolower( $name );
-    }
-
-    function help(){
-        echo " ActiveScaffold Help\n";
+    function menu(){
+        echo " ActiveScaffold Menu\n";
         echo " -------------------------\n";
+        echo " [L]ist tables\n";
         echo " [M]odel\n";
         echo " [C]controller\n";
         echo " -------------------------\n\n";
+
+        return $this->getInput( 'Enter a action', array('L','M','C') );
     }
 
     function connect(){
@@ -161,6 +163,22 @@ class ActiveScaffold {
         unset( $db, $active_group );
 
         return TRUE;
+    }
+
+    function listTables(){
+        $q = mysql_query('show tables;', $this->conn);
+        
+        if( mysql_num_rows( $q ) == 0 ){
+            return FALSE;
+        }
+
+        while( $t = mysql_fetch_array( $q ) ){
+            $this->tables[ ++$i ] = $t[0];
+            
+            echo '[' . $i . '] ' . $t[0] . "\n";
+        }
+        
+        return $this->getInput('Choose a table',array('number'));
     }
 }
 

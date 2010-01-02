@@ -4,13 +4,57 @@ class {name} extends Controller {
 
 	function __construct(){
 		parent::Controller();
+		
+		$this->load->model('{model}');
 	}
 
     function index(){
         
     }
 
+    function add(){
+        $this->load->view('{lowername}/add');
+    }
+    
+    function doAdd(){
+		if( $this->form_validation->run() === TRUE ){
+            if( $this->{model}->add() === TRUE ){
+                $this->load->view('success');
+            } else {
+                $this->load->view('{lowername}/add',array(
+                    'message' => 'dberror'
+                ));
+            }
+		} else {
+            $this->load->view('{lowername}/add');
+		}
+    }
+    
+    function edit(){
+        $id = $this->uri->segment(3);
+
+        if( $id === FALSE ){
+            redirect('main/index','redirect');
+        }
+
+        $this->load->view('{lowername}/edit', $this->{model}->get( $id ) );
+    }
+
+    function doEdit(){
+		if( $this->form_validation->run() === TRUE ){
+            if( $this->{model}->edit() && $this->db->affected_rows() === 1 ){
+                $this->load->view('success');
+            } else {
+                $this->load->view('{lowername}/edit',array(
+                    'message' => 'dberror'
+                ));
+            }
+		} else {
+            $this->load->view('{lowername}/edit');
+		}
+    }
+
 }
 
-/* End of file {fileName}.php */
-/* Location: ./system/application/controller/{fileName}.php */
+/* End of file {lowerame}.php */
+/* Location: ./system/application/controller/{lowerame}.php */
