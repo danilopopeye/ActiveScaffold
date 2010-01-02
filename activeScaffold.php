@@ -48,7 +48,7 @@ class ActiveScaffold {
             return FALSE;
         }
 
-        // TODO: validar se a resposta e boleana
+        // TODO: validate the type of the response
         if( $this->save( $name, $type ) === TRUE ){
             echo ucwords( $type ) .' salvo!';
         }
@@ -63,7 +63,7 @@ class ActiveScaffold {
             return FALSE;
         }
 
-        // TODO: Colocar a validacao antes
+        // TODO: Validate first
         if( is_file( $dir . DS . $name . '.php' ) ){
             echo 'Ja existe um ' . $type . ' chamado ' . $name;
             return FALSE;
@@ -110,7 +110,7 @@ class ActiveScaffold {
         }
     }
 
-    // TODO: mudar o retorno para array com nome do arquivo e conteudo
+    // TODO: respond a array with name and filename
     function parseTemplate($name, $template){
         $buff = @file_get_contents( $template );
 
