@@ -6,10 +6,13 @@ define('DS',DIRECTORY_SEPARATOR);
 include( BASEPATH . '..'. DS .'helpers'. DS .'inflector_helper.php');
 
 class ActiveScaffold {
-    var $actions = array('M','MODEL','C','CONTROLLER', 'L', 'LIST');
     var $conn;
     var $args;
     var $tables;
+    var $database;
+    var $actions = array(
+        'M','MODEL','C','CONTROLLER', 'L', 'LIST', 'B', 'BOTH'
+    );
     var $reserved = array(
         'Controller', 'CI_Base', '_ci_initialize', '_ci_scaffolding', 'index'
     );
@@ -25,9 +28,7 @@ class ActiveScaffold {
             $action = $this->parseAction( $this->args[0] );
 
             if( $action == 'list' ){
-                $table = $this->listTables();
-                
-                return;
+                return $this->listAction();
             }
 
             return $this->getAction( $this->args[0], $this->args[1] );
@@ -110,7 +111,15 @@ class ActiveScaffold {
             return 'controller';
         } else if ( $a == 'L' OR $a == 'LIST' ){
             return 'list';
+        } else if ( $a == 'B' OR $a == 'BOTH' ){
+            return 'both';
         }
+    }
+    
+    function listAction(){
+        $table = $this->listTables();
+        
+        $this->parseTable( $table );
     }
 
     // TODO: respond a array with name and filename
@@ -156,6 +165,8 @@ class ActiveScaffold {
             return FALSE;
         }
 
+        $this->database = $db['database'];
+
         if( ! @mysql_select_db($db['database'], $this->conn) ){
             return FALSE;
         }
@@ -167,18 +178,37 @@ class ActiveScaffold {
 
     function listTables(){
         $q = mysql_query('show tables;', $this->conn);
-        
+
         if( mysql_num_rows( $q ) == 0 ){
             return FALSE;
         }
 
+        echo 'Tables form: ' . $this->database . "\n";
+
         while( $t = mysql_fetch_array( $q ) ){
             $this->tables[ ++$i ] = $t[0];
-            
-            echo '[' . $i . '] ' . $t[0] . "\n";
+
+            echo ' [' . $i . '] ' . $t[0] . "\n";
         }
         
         return $this->getInput('Choose a table',array('number'));
+    }
+
+    function parseTable( $index ){
+        if( ! is_numeric( $index ) OR ! $this->parseTableFields( $index ) ){
+            return FALSE;
+        }
+
+        echo 'Working with table ' . $this->tables[ $index ] . "\n";
+        echo " [M]odel\n";
+        echo " [C]controller\n";
+        echo " [B]oth\n";
+
+        $action = $this->parseAction(
+            $this->getInput('What to build', array('M','C','B'))
+        );
+
+        echo $action;
     }
 }
 
