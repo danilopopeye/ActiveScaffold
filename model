@@ -13,7 +13,7 @@ class {name} extends Model {
     }
 
     function edit(){
-        return $this->db->where('id',$this->input->post('id'))->update('{lowername}',array(
+        return $this->db->where('id', $this->input->post('id') )->update('{lowername}', array(
             {fields}
         ));
     }
@@ -24,7 +24,7 @@ class {name} extends Model {
         }
 
         return array_shift(
-            $this->db->get_where('{lowername}',array('id' => $id))->result_array()
+            $this->db->get_where( '{lowername}', array( 'id' => $id ) )->result_array()
         );
     }
 

@@ -9,6 +9,7 @@ class ActiveScaffold {
     var $conn;
     var $args;
     var $tables;
+    var $fields;
     var $database;
     var $actions = array(
         'M','MODEL','C','CONTROLLER', 'L', 'LIST', 'B', 'BOTH'
@@ -38,27 +39,25 @@ class ActiveScaffold {
         
     }
 
-    function getAction( $type, $name = FALSE ){
-        if( ! $type ){
-            // TODO: Redirect to menu
-            echo "Invalid action!";
+    function getAction( $type = FALSE, $name = FALSE, $index = FALSE ){
+        if( ! $type OR ! $name OR ( $type == 'model' && ! $index ) ){
             return FALSE;
         }
 
         $name = strtolower( $name );
 
-        if( $this->getInput( 'Build a '. $type .' called "'. $name .'"', array('y','n') ) == 'n' ){
+        if( $this->getInput( 'Build a '. $type .' called "'. ucwords( $name ) .'"', array('y','n') ) == 'n' ){
             // TODO: Redirect to menu
             return FALSE;
         }
 
         // TODO: validate the type of the response
-        if( $this->save( $name, $type ) === TRUE ){
+        if( $this->save( $name, $type, $index ) === TRUE ){
             echo ucwords( $type ) .' salvo!';
         }
     }
 
-    function save( $name, $type ){
+    function save( $name, $type, $index ){
         $dir = BASEPATH . $type . 's';
 
         if( ! is_dir( $dir ) ){
@@ -71,7 +70,7 @@ class ActiveScaffold {
             return FALSE;
         }
 
-        $template = $this->parseTemplate( $name, $type );
+        $template = $this->parseTemplate( $name, $type, $index );
 
         if( $template === FALSE ){
             echo 'Erro ao parsear o template do ' . $type . ' ' . $name;
@@ -123,7 +122,7 @@ class ActiveScaffold {
     }
 
     // TODO: respond a array with name and filename
-    function parseTemplate($name, $template){
+    function parseTemplate($name, $template, $index){
         $buff = @file_get_contents( $template );
 
         if( $buff === FALSE ){
@@ -132,7 +131,11 @@ class ActiveScaffold {
 
         $buff = str_replace( '{name}', ucwords( $name ), $buff );
         $buff = str_replace( '{model}', plural( ucwords( $name ) ), $buff );
-        $buff = str_replace( '{lowerame}', strtolower( $name ), $buff );
+        $buff = str_replace( '{lowername}', strtolower( $name ), $buff );
+
+        if( $template == 'model' ){
+            $buff = str_replace( '{fields}', $this->parseFields( $index ), $buff );
+        }
 
         return $buff;
     }
@@ -185,7 +188,7 @@ class ActiveScaffold {
 
         echo 'Tables form: ' . $this->database . "\n";
 
-        while( $t = mysql_fetch_array( $q ) ){
+        while( $t = mysql_fetch_row( $q ) ){
             $this->tables[ ++$i ] = $t[0];
 
             echo ' [' . $i . '] ' . $t[0] . "\n";
@@ -194,22 +197,75 @@ class ActiveScaffold {
         return $this->getInput('Choose a table',array('number'));
     }
 
+    function parseTableFields( $index ){
+        if( ! is_numeric( $index ) ){
+            return FALSE;
+        }
+        
+        $this->fields[ $index ] = array();
+
+        $q = mysql_query('SHOW COLUMNS FROM ' . $this->tables[ $index ] );
+
+        if( mysql_num_rows( $q ) == 0 ){
+            return FALSE;
+        }
+
+        while( $t = mysql_fetch_assoc( $q ) ){
+            $this->fields[ $index ][] = $t;
+        }
+        
+        return TRUE;
+    }
+
+    function parseFields( $index ){
+        if( ! is_numeric( $index ) ){
+            return FALSE;
+        }
+        
+        $buff = '';
+
+        foreach( $this->fields[ $index ] as $field ){
+            if( $field['Field'] == 'id' ){
+                continue;
+            }
+
+            $buff .= '$this->input->post("'. $field['Field'] .'"),'."\n            ";
+        }
+
+        return rtrim( $buff, ",\n            ");
+    }
+
     function parseTable( $index ){
         if( ! is_numeric( $index ) OR ! $this->parseTableFields( $index ) ){
             return FALSE;
         }
+        
+        $table = $this->tables[ $index ];
 
-        echo 'Working with table ' . $this->tables[ $index ] . "\n";
+        echo 'Working with table ' . $table . "\n";
         echo " [M]odel\n";
         echo " [C]controller\n";
         echo " [B]oth\n";
 
         $action = $this->parseAction(
-            $this->getInput('What to build', array('M','C','B'))
+            $this->getInput( 'What to build', array('M','C','B') )
         );
 
-        echo $action;
+        switch( $action ){
+            case 'model':
+            case 'controller':
+                $this->getAction( $action, $table, $index );
+                break;
+            case 'both':
+                $this->getAction( 'model', $table );
+                $this->getAction( 'controller', $table );
+                break;
+            default:
+                echo 'Invalid action!';
+                break;
+        }
     }
+
 }
 
 ?>
