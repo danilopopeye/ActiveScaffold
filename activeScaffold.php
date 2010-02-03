@@ -1,6 +1,7 @@
 <?php
 define('BASEPATH','../');
 define('DS',DIRECTORY_SEPARATOR);
+define('BR',"\n");
 
 // TODO: find a better place to put the include :(
 include( BASEPATH . '..'. DS .'helpers'. DS .'inflector_helper.php');
@@ -36,7 +37,8 @@ class ActiveScaffold {
         }
 
         $action = $this->parseAction( $this->menu() );
-        
+
+        $this->getAction( $action );
     }
 
     function getAction( $type = FALSE, $name = FALSE, $index = FALSE ){
@@ -45,6 +47,10 @@ class ActiveScaffold {
         }
 
         $name = strtolower( $name );
+        
+        if( $type == 'controller' ){
+        	$name = singular( $name );
+        }
 
         if( $this->getInput( 'Build a '. $type .' called "'. ucwords( $name ) .'"', array('y','n') ) == 'n' ){
             // TODO: Redirect to menu
@@ -53,7 +59,7 @@ class ActiveScaffold {
 
         // TODO: validate the type of the response
         if( $this->save( $name, $type, $index ) === TRUE ){
-            echo ucwords( $type ) .' salvo!';
+            echo ucwords( $type ) .' salvo!' . BR;
         }
     }
 
@@ -92,7 +98,7 @@ class ActiveScaffold {
             $options = '[ ' . implode( ' | ', $options ) .' ]';
         }
 
-        echo ' '. $message .'? '. $options ."\n:";
+        echo ' '. $message .'? '. $options . BR . ':';
 
         return strtolower( trim( fgets( STDIN ) ) );
     }
@@ -130,23 +136,28 @@ class ActiveScaffold {
         }
 
         $buff = str_replace( '{name}', ucwords( $name ), $buff );
-        $buff = str_replace( '{model}', plural( ucwords( $name ) ), $buff );
         $buff = str_replace( '{lowername}', strtolower( $name ), $buff );
 
-        if( $template == 'model' ){
-            $buff = str_replace( '{fields}', $this->parseFields( $index ), $buff );
-        }
+		switch( $template ){
+			case 'model':
+				$buff = str_replace( '{fields}', $this->parseFields( $index ), $buff );
+				break;
+			case 'controller':
+				// TODO: Dont gess the model name
+		        $buff = str_replace( '{model}', plural( ucwords( $name ) ), $buff );
+		        break;
+		}
 
         return $buff;
     }
 
     function menu(){
-        echo " ActiveScaffold Menu\n";
-        echo " -------------------------\n";
-        echo " [L]ist tables\n";
-        echo " [M]odel\n";
-        echo " [C]controller\n";
-        echo " -------------------------\n\n";
+        echo " ActiveScaffold Menu" . BR;
+        echo " -------------------------" . BR;
+        echo " [L]ist tables" . BR;
+        echo " [M]odel" . BR;
+        echo " [C]controller" . BR;
+        echo " -------------------------" . BR . BR;
 
         return $this->getInput( 'Enter a action', array('L','M','C') );
     }
@@ -186,12 +197,12 @@ class ActiveScaffold {
             return FALSE;
         }
 
-        echo 'Tables form: ' . $this->database . "\n";
+        echo 'Tables form: ' . $this->database . BR;
 
         while( $t = mysql_fetch_row( $q ) ){
             $this->tables[ ++$i ] = $t[0];
 
-            echo ' [' . $i . '] ' . $t[0] . "\n";
+            echo ' [' . $i . '] ' . $t[0] . BR;
         }
         
         return $this->getInput('Choose a table',array('number'));
@@ -229,10 +240,10 @@ class ActiveScaffold {
                 continue;
             }
 
-            $buff .= '$this->input->post("'. $field['Field'] .'"),'."\n            ";
+            $buff .= '$this->input->post("'. $field['Field'] .'"),'. BR ."            ";
         }
 
-        return rtrim( $buff, ",\n            ");
+        return rtrim( $buff, ','. BR .'            ');
     }
 
     function parseTable( $index ){
@@ -242,10 +253,10 @@ class ActiveScaffold {
         
         $table = $this->tables[ $index ];
 
-        echo 'Working with table ' . $table . "\n";
-        echo " [M]odel\n";
-        echo " [C]controller\n";
-        echo " [B]oth\n";
+        echo 'Working with table ' . $table . BR;
+        echo " [M]odel" . BR;
+        echo " [C]controller" . BR;
+        echo " [B]oth" . BR;
 
         $action = $this->parseAction(
             $this->getInput( 'What to build', array('M','C','B') )
@@ -257,8 +268,10 @@ class ActiveScaffold {
                 $this->getAction( $action, $table, $index );
                 break;
             case 'both':
-                $this->getAction( 'model', $table );
+            	// Build the controller
                 $this->getAction( 'controller', $table );
+            	// Build the model
+                $this->getAction( 'model', $table, $index );
                 break;
             default:
                 echo 'Invalid action!';
