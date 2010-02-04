@@ -6,6 +6,8 @@ class {name} extends Controller {
 		parent::Controller();
 		
 		$this->load->model('{model}');
+
+		$this->load->scaffolding('{table}');
 	}
 
     function index(){

@@ -143,8 +143,10 @@ class ActiveScaffold {
 				$buff = str_replace( '{fields}', $this->parseFields( $index ), $buff );
 				break;
 			case 'controller':
+				$plural = plural( $name );
 				// TODO: Dont gess the model name
-		        $buff = str_replace( '{model}', plural( ucwords( $name ) ), $buff );
+		        $buff = str_replace( '{model}', ucwords( $name ), $buff );
+		        $buff = str_replace( '{table}', $plural, $buff );
 		        break;
 		}
 
