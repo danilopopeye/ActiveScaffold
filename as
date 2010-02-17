@@ -6,4 +6,3 @@ $as = new ActiveScaffold();
 
 $as->run( $argv );
 ?>
-

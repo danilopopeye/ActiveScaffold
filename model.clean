@@ -1,0 +1,12 @@
+<?php
+
+class {name} extends Model {
+
+	function __construct(){
+		parent::Model();
+	}
+
+}
+
+/* End of file {lowername}.php */
+/* Location: ./system/application/model/{lowername}.php */

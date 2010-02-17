@@ -6,37 +6,37 @@ class {name} extends Model {
 		parent::Model();
 	}
 
-    function add(){
-        return $this->db->insert('{lowername}',array(
-            {fields}
-        ));
-    }
+	function add(){
+		return $this->db->insert('{lowername}',array(
+{fields}
+		));
+	}
 
-    function edit(){
-        return $this->db->where('id', $this->input->post('id') )->update('{lowername}', array(
-            {fields}
-        ));
-    }
+	function edit(){
+		return $this->db->where('id', $this->input->post('id') )->update('{lowername}', array(
+{fields}
+		));
+	}
 
-    function get($id = FALSE){
-        if( $id === FALSE ){
-            return FALSE;
-        }
+	function get($id = FALSE){
+		if( $id === FALSE ){
+			return FALSE;
+		}
 
-        return array_shift(
-            $this->db->get_where( '{lowername}', array( 'id' => $id ) )->result_array()
-        );
-    }
+		return array_shift(
+			$this->db->get_where( '{lowername}', array( 'id' => $id ) )->result_array()
+		);
+	}
 
-    function get_all(){
-        $all = $this->db->get('{lowername}')->result();
+	function get_all(){
+		$all = $this->db->get('{lowername}')->result();
 
-        foreach( $all as $p ){
-            $buff[ $p->id ] = $p->name;
-        }
+		foreach( $all as $p ){
+			$buff[ $p->id ] = $p->name;
+		}
 
-        return $buff;
-    }
+		return $buff;
+	}
 
 }
 
